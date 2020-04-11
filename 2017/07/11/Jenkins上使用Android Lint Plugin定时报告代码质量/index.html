@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/function%20small()%20%7B%20%5Bnative%20code%5D%20%7D?v=5.1.4">
+
+
+
+
+
+
+  <meta name="keywords" content="Android,Jenkins," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言实习的第一个任务是一个调研任务，要求Jenkins集成开发环境上配置一个自动运行的任务，如果任务执行前1小时develop分支有提交，就自动执行构建任务，运行代码规范检查、Lint检查的工具，并把结果发邮件给相关人员。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Jenkins上使用Android Lint Plugin定时报告代码质量">
+<meta property="og:url" content="http://www.imwxj.cn/2017/07/11/Jenkins%E4%B8%8A%E4%BD%BF%E7%94%A8Android%20Lint%20Plugin%E5%AE%9A%E6%97%B6%E6%8A%A5%E5%91%8A%E4%BB%A3%E7%A0%81%E8%B4%A8%E9%87%8F/index.html">
+<meta property="og:site_name" content="Gundam&#39;s Base">
+<meta property="og:description" content="前言实习的第一个任务是一个调研任务，要求Jenkins集成开发环境上配置一个自动运行的任务，如果任务执行前1小时develop分支有提交，就自动执行构建任务，运行代码规范检查、Lint检查的工具，并把结果发邮件给相关人员。">
+<meta property="og:image" content="https://developer.android.com/studio/images/write/lint.png?hl=zh-cn">
+<meta property="og:image" content="http://osnyzf7ny.bkt.clouddn.com/lint-build.png">
+<meta property="og:image" content="http://osnyzf7ny.bkt.clouddn.com/after-lint.png">
+<meta property="og:image" content="http://osnyzf7ny.bkt.clouddn.com/pollscm.png">
+<meta property="article:published_time" content="2017-07-11T14:12:00.000Z">
+<meta property="article:modified_time" content="2017-07-25T13:26:22.000Z">
+<meta property="article:author" content="Xuejian">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="Jenkins">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://developer.android.com/studio/images/write/lint.png?hl=zh-cn">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.imwxj.cn/2017/07/11/Jenkins上使用Android Lint Plugin定时报告代码质量/"/>
+
+
+
+
+
+  <title>Jenkins上使用Android Lint Plugin定时报告代码质量 | Gundam's Base</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Gundam's Base</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">瞎扯的地方</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.imwxj.cn/2017/07/11/Jenkins%E4%B8%8A%E4%BD%BF%E7%94%A8Android%20Lint%20Plugin%E5%AE%9A%E6%97%B6%E6%8A%A5%E5%91%8A%E4%BB%A3%E7%A0%81%E8%B4%A8%E9%87%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Xuejian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Gundam's Base">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Jenkins上使用Android Lint Plugin定时报告代码质量</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-11T22:12:00+08:00">
+                2017-07-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" itemprop="url" rel="index">
+                    <span itemprop="name">环境搭建</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>实习的第一个任务是一个调研任务，要求Jenkins集成开发环境上配置一个自动运行的任务，如果任务执行前1小时develop分支有提交，就自动执行构建任务，运行代码规范检查、Lint检查的工具，并把结果发邮件给相关人员。</p>
+<a id="more"></a>
+<h2 id="关于Lint"><a href="#关于Lint" class="headerlink" title="关于Lint"></a>关于Lint</h2><p>Lint 是Android Studio提供的的代码扫描工具，可帮助您发现并纠正代码结构质量的问题，而无需实际执行该应用，也不必编写测试用例。该工具会报告其检测到的每个问题并提供该问题的描述消息和严重级别，以便您可以快速确定需要优先进行哪些关键改进。此外，您可以调低问题的严重级别，忽略与项目无关的问题，也可以调高严重级别，以突出特定问题。<br><img src="https://developer.android.com/studio/images/write/lint.png?hl=zh-cn" alt="image"></p>
+<h2 id="关于Android-Lint-Plugin"><a href="#关于Android-Lint-Plugin" class="headerlink" title="关于Android Lint Plugin"></a>关于Android Lint Plugin</h2><p>这是Jenkins的一个基于静态代码分析插件的插件，值得注意的是，此插件不会帮你运行lint检查，它只是解析Lint运行之后产生的xml文件，然后再用一定的形式展示出来，而它要解析的xml文件，需要调用gradle lint的命令去生成。<br>可以在android studio的命令行中输入：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">gradlew lint</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">Ran lint on variant release: 7 issues found</span><br><span class="line">Ran lint on variant debug: 7 issues found</span><br><span class="line">Wrote HTML report to file:&#x2F;&#x2F;&#x2F;D:&#x2F;AndroidStudioProjects&#x2F;HelloWorld&#x2F;app&#x2F;build&#x2F;reports&#x2F;lint-results.html</span><br><span class="line">Wrote XML report to file:&#x2F;&#x2F;&#x2F;D:&#x2F;AndroidStudioProjects&#x2F;HelloWorld&#x2F;app&#x2F;build&#x2F;reports&#x2F;lint-results.xml</span><br><span class="line"></span><br><span class="line">BUILD SUCCESSFUL</span><br><span class="line"></span><br><span class="line">Total time: 29.726 secs</span><br></pre></td></tr></table></figure>
+<p>等到运行结束后，你将会在/app/build/reports/中发现lint-results.html和lint-results.xml两个文件，而其中的xml文件就是所需要的了。</p>
+<h2 id="Jenkins的配置"><a href="#Jenkins的配置" class="headerlink" title="Jenkins的配置"></a>Jenkins的配置</h2><h3 id="安装插件"><a href="#安装插件" class="headerlink" title="安装插件"></a>安装插件</h3><p><a href="https://wiki.jenkins.io/display/JENKINS/Android+Lint+Plugin" target="_blank" rel="noopener">Android Lint Plugin</a></p>
+<h3 id="在gradle的task中添加lint"><a href="#在gradle的task中添加lint" class="headerlink" title="在gradle的task中添加lint"></a>在gradle的task中添加lint</h3><p>由于lint已集成在andoird gradle中了，所以我们并不需要配置gradle的task，直接使用就好。<br><img src="http://osnyzf7ny.bkt.clouddn.com/lint-build.png" alt="image"></p>
+<h3 id="构建后添加Publish-Android-Lint-results"><a href="#构建后添加Publish-Android-Lint-results" class="headerlink" title="构建后添加Publish Android Lint results"></a>构建后添加Publish Android Lint results</h3><p><img src="http://osnyzf7ny.bkt.clouddn.com/after-lint.png" alt="image"></p>
+<ul>
+<li>可在Lint files设置插件要分析的lint产生的xml结果，不设置的话将自动扫描名字匹配lint-results*的xml文件，由于默认产生的xml文件就是lint-results.xml，因此我并未设置。</li>
+<li>选择Run always时可在项目build失败的时候继续接解析xml文件解析，否则将会跳过解析步骤。</li>
+<li>此时点击构建项目后可以在输出目录左边发现”Lint Issues”的图标</li>
+</ul>
+<h3 id="在构建触发器中设置Poll-SCM"><a href="#在构建触发器中设置Poll-SCM" class="headerlink" title="在构建触发器中设置Poll SCM"></a>在构建触发器中设置Poll SCM</h3><p><img src="http://osnyzf7ny.bkt.clouddn.com/pollscm.png" alt="image"><br>这项设置代表每小时将会检查一次分支的代码，如果有新commit，将会进行自动构建项目。</p>
+<h4 id="关于Poll-SCM和Build-periodically的区别"><a href="#关于Poll-SCM和Build-periodically的区别" class="headerlink" title="关于Poll SCM和Build periodically的区别"></a>关于Poll SCM和Build periodically的区别</h4><ul>
+<li>Poll SCM：定时检查目标分支的源码变更，如果有更新就checkout最新code下来，然后执行构建动作。</li>
+<li>Build periodically：周期进行项目构建，不管代码是否发生变化。</li>
+</ul>
+<h4 id="关于时间的设置"><a href="#关于时间的设置" class="headerlink" title="关于时间的设置"></a>关于时间的设置</h4><p>具体设置请查阅其他资料，这里提供一个简单方便的方法，使用@yearly, @annually, @monthly, @weekly, @daily, @midnight，@hourly 等时间别名可达到相同效果，比如我这里使用的@hourly代表每小时。</p>
+<h3 id="构建后添加Editable-Email-Notification进行相关通知"><a href="#构建后添加Editable-Email-Notification进行相关通知" class="headerlink" title="构建后添加Editable Email Notification进行相关通知"></a>构建后添加Editable Email Notification进行相关通知</h3><p>参考资料：<a href="http://www.cnblogs.com/zz0412/p/jenkins_jj_01.html" target="_blank" rel="noopener">Jenkins进阶系列之——01使用email-ext替换Jenkins的默认邮件通知</a><br>我把Default Content换成了里面的模板，然后发现lint issue的页面是在job工程中的androidLintResult，于是增加一条lint结果的url，最终模板如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line">&lt;!DOCTYPE html&gt;</span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;</span><br><span class="line">&lt;meta charset&#x3D;&quot;UTF-8&quot;&gt;</span><br><span class="line">&lt;title&gt;$&#123;ENV, var&#x3D;&quot;JOB_NAME&quot;&#125;-第$&#123;BUILD_NUMBER&#125;次构建日志&lt;&#x2F;title&gt;</span><br><span class="line">&lt;&#x2F;head&gt;</span><br><span class="line"></span><br><span class="line">&lt;body leftmargin&#x3D;&quot;8&quot; marginwidth&#x3D;&quot;0&quot; topmargin&#x3D;&quot;8&quot; marginheight&#x3D;&quot;4&quot;</span><br><span class="line">    offset&#x3D;&quot;0&quot;&gt;</span><br><span class="line">    &lt;table width&#x3D;&quot;95%&quot; cellpadding&#x3D;&quot;0&quot; cellspacing&#x3D;&quot;0&quot;</span><br><span class="line">        style&#x3D;&quot;font-size: 11pt; font-family: Tahoma, Arial, Helvetica, sans-serif&quot;&gt;</span><br><span class="line">        &lt;tr&gt;</span><br><span class="line">            &lt;td&gt;(本邮件是程序自动下发的，请勿回复！)&lt;&#x2F;td&gt;</span><br><span class="line">        &lt;&#x2F;tr&gt;</span><br><span class="line">        &lt;tr&gt;</span><br><span class="line">            &lt;td&gt;&lt;h2&gt;</span><br><span class="line">                    &lt;font color&#x3D;&quot;#0000FF&quot;&gt;构建结果 - $&#123;BUILD_STATUS&#125;&lt;&#x2F;font&gt;</span><br><span class="line">                &lt;&#x2F;h2&gt;&lt;&#x2F;td&gt;</span><br><span class="line">        &lt;&#x2F;tr&gt;</span><br><span class="line">        &lt;tr&gt;</span><br><span class="line">            &lt;td&gt;&lt;br &#x2F;&gt;</span><br><span class="line">            &lt;b&gt;&lt;font color&#x3D;&quot;#0B610B&quot;&gt;构建信息&lt;&#x2F;font&gt;&lt;&#x2F;b&gt;</span><br><span class="line">            &lt;hr size&#x3D;&quot;2&quot; width&#x3D;&quot;100%&quot; align&#x3D;&quot;center&quot; &#x2F;&gt;&lt;&#x2F;td&gt;</span><br><span class="line">        &lt;&#x2F;tr&gt;</span><br><span class="line">        &lt;tr&gt;</span><br><span class="line">            &lt;td&gt;</span><br><span class="line">                &lt;ul&gt;</span><br><span class="line">                    &lt;li&gt;项目名称&amp;nbsp;：&amp;nbsp;$&#123;PROJECT_NAME&#125;&lt;&#x2F;li&gt;</span><br><span class="line">                    &lt;li&gt;构建编号&amp;nbsp;：&amp;nbsp;第$&#123;BUILD_NUMBER&#125;次构建&lt;&#x2F;li&gt;</span><br><span class="line">                    &lt;li&gt;触发原因：&amp;nbsp;$&#123;CAUSE&#125;&lt;&#x2F;li&gt;</span><br><span class="line">                    &lt;li&gt;构建日志：&amp;nbsp;&lt;a href&#x3D;&quot;$&#123;BUILD_URL&#125;console&quot;&gt;$&#123;BUILD_URL&#125;console&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;</span><br><span class="line">                    &lt;li&gt;Lint Issues：&amp;nbsp;&lt;a href&#x3D;&quot;$&#123;BUILD_URL&#125;androidLintResult&quot;&gt;$&#123;BUILD_URL&#125;androidLintResult&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;</span><br><span class="line">                    &lt;li&gt;构建&amp;nbsp;&amp;nbsp;Url&amp;nbsp;：&amp;nbsp;&lt;a href&#x3D;&quot;$&#123;BUILD_URL&#125;&quot;&gt;$&#123;BUILD_URL&#125;&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;</span><br><span class="line">                    &lt;li&gt;工作目录&amp;nbsp;：&amp;nbsp;&lt;a href&#x3D;&quot;$&#123;PROJECT_URL&#125;ws&quot;&gt;$&#123;PROJECT_URL&#125;ws&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;</span><br><span class="line">                    &lt;li&gt;项目&amp;nbsp;&amp;nbsp;Url&amp;nbsp;：&amp;nbsp;&lt;a href&#x3D;&quot;$&#123;PROJECT_URL&#125;&quot;&gt;$&#123;PROJECT_URL&#125;&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;</span><br><span class="line">                &lt;&#x2F;ul&gt;</span><br><span class="line">            &lt;&#x2F;td&gt;</span><br><span class="line">        &lt;&#x2F;tr&gt;</span><br><span class="line">        &lt;tr&gt;</span><br><span class="line">            &lt;td&gt;&lt;b&gt;&lt;font color&#x3D;&quot;#0B610B&quot;&gt;Changes Since Last</span><br><span class="line">                        Successful Build:&lt;&#x2F;font&gt;&lt;&#x2F;b&gt;</span><br><span class="line">            &lt;hr size&#x3D;&quot;2&quot; width&#x3D;&quot;100%&quot; align&#x3D;&quot;center&quot; &#x2F;&gt;&lt;&#x2F;td&gt;</span><br><span class="line">        &lt;&#x2F;tr&gt;</span><br><span class="line">        &lt;tr&gt;</span><br><span class="line">            &lt;td&gt;</span><br><span class="line">                &lt;ul&gt;</span><br><span class="line">                    &lt;li&gt;历史变更记录 : &lt;a href&#x3D;&quot;$&#123;PROJECT_URL&#125;changes&quot;&gt;$&#123;PROJECT_URL&#125;changes&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;</span><br><span class="line">                &lt;&#x2F;ul&gt; $&#123;CHANGES_SINCE_LAST_SUCCESS,reverse&#x3D;true, format&#x3D;&quot;Changes for Build #%n:&lt;br &#x2F;&gt;%c&lt;br &#x2F;&gt;&quot;,showPaths&#x3D;true,changesFormat&#x3D;&quot;&lt;pre&gt;[%a]&lt;br &#x2F;&gt;%m&lt;&#x2F;pre&gt;&quot;,pathFormat&#x3D;&quot;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;%p&quot;&#125;</span><br><span class="line">            &lt;&#x2F;td&gt;</span><br><span class="line">        &lt;&#x2F;tr&gt;</span><br><span class="line">        &lt;tr&gt;</span><br><span class="line">            &lt;td&gt;&lt;b&gt;Failed Test Results&lt;&#x2F;b&gt;</span><br><span class="line">            &lt;hr size&#x3D;&quot;2&quot; width&#x3D;&quot;100%&quot; align&#x3D;&quot;center&quot; &#x2F;&gt;&lt;&#x2F;td&gt;</span><br><span class="line">        &lt;&#x2F;tr&gt;</span><br><span class="line">        &lt;tr&gt;</span><br><span class="line">            &lt;td&gt;&lt;pre</span><br><span class="line">                    style&#x3D;&quot;font-size: 11pt; font-family: Tahoma, Arial, Helvetica, sans-serif&quot;&gt;$FAILED_TESTS&lt;&#x2F;pre&gt;</span><br><span class="line">                &lt;br &#x2F;&gt;&lt;&#x2F;td&gt;</span><br><span class="line">        &lt;&#x2F;tr&gt;</span><br><span class="line">        &lt;tr&gt;</span><br><span class="line">            &lt;td&gt;&lt;b&gt;&lt;font color&#x3D;&quot;#0B610B&quot;&gt;构建日志 (最后 100行):&lt;&#x2F;font&gt;&lt;&#x2F;b&gt;</span><br><span class="line">            &lt;hr size&#x3D;&quot;2&quot; width&#x3D;&quot;100%&quot; align&#x3D;&quot;center&quot; &#x2F;&gt;&lt;&#x2F;td&gt;</span><br><span class="line">        &lt;&#x2F;tr&gt;</span><br><span class="line">        &lt;!-- &lt;tr&gt;</span><br><span class="line">            &lt;td&gt;Test Logs (if test has ran): &lt;a</span><br><span class="line">                href&#x3D;&quot;$&#123;PROJECT_URL&#125;ws&#x2F;TestResult&#x2F;archive_logs&#x2F;Log-Build-$&#123;BUILD_NUMBER&#125;.zip&quot;&gt;$&#123;PROJECT_URL&#125;&#x2F;ws&#x2F;TestResult&#x2F;archive_logs&#x2F;Log-Build-$&#123;BUILD_NUMBER&#125;.zip&lt;&#x2F;a&gt;</span><br><span class="line">                &lt;br &#x2F;&gt;</span><br><span class="line">            &lt;br &#x2F;&gt;</span><br><span class="line">            &lt;&#x2F;td&gt;</span><br><span class="line">        &lt;&#x2F;tr&gt; --&gt;</span><br><span class="line">        &lt;tr&gt;</span><br><span class="line">            &lt;td&gt;&lt;textarea cols&#x3D;&quot;80&quot; rows&#x3D;&quot;30&quot; readonly&#x3D;&quot;readonly&quot;</span><br><span class="line">                    style&#x3D;&quot;font-family: Courier New&quot;&gt;$&#123;BUILD_LOG, maxLines&#x3D;100&#125;&lt;&#x2F;textarea&gt;</span><br><span class="line">            &lt;&#x2F;td&gt;</span><br><span class="line">        &lt;&#x2F;tr&gt;</span><br><span class="line">    &lt;&#x2F;table&gt;</span><br><span class="line">&lt;&#x2F;body&gt;</span><br><span class="line">&lt;&#x2F;html&gt;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="build-gradle中的设置"><a href="#build-gradle中的设置" class="headerlink" title="build.gradle中的设置"></a>build.gradle中的设置</h2><p>由于默认情况下，执行lint命令时如果遇到错误就停止了，如果要lint执行出错后依旧继续构建，则需要将该参数置为false，可以在build.gradle文件中修改：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">android &#123;</span><br><span class="line"> ...</span><br><span class="line">    lintOptions &#123;</span><br><span class="line">        &#x2F;&#x2F; Don&#39;t abort if Lint finds an error, otherwise the Jenkins build</span><br><span class="line">        &#x2F;&#x2F; will be marked as failed, and Jenkins won&#39;t analyse the Lint output</span><br><span class="line">        abortOnError false</span><br><span class="line">    &#125;</span><br><span class="line"> ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>初次接触Jenkins和Android Lint，自己先在本地的电脑上搭好环境并用自己在github上的项目调试，还是踩了不少坑，比如build突然就莫名失败，gradle的命令不熟悉等，还是有不少收获的，不过导师并不满意邮件的结果，因为我只是提供了一条url，要求应该是把结果显示在邮件中，还需要进一步定制邮件。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://wiki.jenkins.io/display/JENKINS/Android+Lint+Plugin" target="_blank" rel="noopener">AndroidLintPlugin</a></li>
+<li><a href="http://www.cnblogs.com/zz0412/p/jenkins_jj_01.html" target="_blank" rel="noopener">Jenkins进阶系列之——01使用email-ext替换Jenkins的默认邮件通知</a>   </li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/Jenkins/" rel="tag"># Jenkins</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/12/23/%E6%B5%85%E8%B0%88Android%20Binder%E6%9C%BA%E5%88%B6/" rel="next" title="浅谈Android Binder机制">
+                <i class="fa fa-chevron-left"></i> 浅谈Android Binder机制
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/07/11/%E5%85%B3%E4%BA%8EJenkins-Android%E2%80%9CError-occurred-during-initialization-of-VM%E2%80%9D%E7%9A%84%E9%94%99%E8%AF%AF/" rel="prev" title="关于Jenkins Android“Error occurred during initialization of VM”的错误">
+                关于Jenkins Android“Error occurred during initialization of VM”的错误 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.png"
+                alt="Xuejian" />
+            
+              <p class="site-author-name" itemprop="name">Xuejian</p>
+              <p class="site-description motion-element" itemprop="description">BAT拧螺丝的</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/OLieWaGundam" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://twitter.com/Wxj233" target="_blank" title="Twitter">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Twitter</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="http://weibo.com/2436310322" target="_blank" title="Weibo">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Weibo</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://www.zhihu.com/people/wu-jie-chao-14" target="_blank" title="知乎">
+                      
+                        <i class="fa fa-fw fa-globe"></i>知乎</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于Lint"><span class="nav-number">2.</span> <span class="nav-text">关于Lint</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于Android-Lint-Plugin"><span class="nav-number">3.</span> <span class="nav-text">关于Android Lint Plugin</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Jenkins的配置"><span class="nav-number">4.</span> <span class="nav-text">Jenkins的配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装插件"><span class="nav-number">4.1.</span> <span class="nav-text">安装插件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在gradle的task中添加lint"><span class="nav-number">4.2.</span> <span class="nav-text">在gradle的task中添加lint</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#构建后添加Publish-Android-Lint-results"><span class="nav-number">4.3.</span> <span class="nav-text">构建后添加Publish Android Lint results</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在构建触发器中设置Poll-SCM"><span class="nav-number">4.4.</span> <span class="nav-text">在构建触发器中设置Poll SCM</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#关于Poll-SCM和Build-periodically的区别"><span class="nav-number">4.4.1.</span> <span class="nav-text">关于Poll SCM和Build periodically的区别</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#关于时间的设置"><span class="nav-number">4.4.2.</span> <span class="nav-text">关于时间的设置</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#构建后添加Editable-Email-Notification进行相关通知"><span class="nav-number">4.5.</span> <span class="nav-text">构建后添加Editable Email Notification进行相关通知</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#build-gradle中的设置"><span class="nav-number">5.</span> <span class="nav-text">build.gradle中的设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#后记"><span class="nav-number">6.</span> <span class="nav-text">后记</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">7.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Xuejian</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

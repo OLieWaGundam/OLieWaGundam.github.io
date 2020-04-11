@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/function%20small()%20%7B%20%5Bnative%20code%5D%20%7D?v=5.1.4">
+
+
+
+
+
+
+  <meta name="keywords" content="Android,自定义View," />
+
+
+
+
+
+
+
+
+
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android实现仿支付宝loading条">
+<meta property="og:url" content="http://www.imwxj.cn/2016/10/28/Android%E5%AE%9E%E7%8E%B0%E4%BB%BF%E6%94%AF%E4%BB%98%E5%AE%9Dloading%E6%9D%A1/index.html">
+<meta property="og:site_name" content="Gundam&#39;s Base">
+<meta property="og:image" content="http://www.imwxj.cn/2016/10/28/Android%E5%AE%9E%E7%8E%B0%E4%BB%BF%E6%94%AF%E4%BB%98%E5%AE%9Dloading%E6%9D%A1/LoadingView.gif">
+<meta property="og:image" content="http://www.imwxj.cn/2016/10/28/Android%E5%AE%9E%E7%8E%B0%E4%BB%BF%E6%94%AF%E4%BB%98%E5%AE%9Dloading%E6%9D%A1/process.png">
+<meta property="article:published_time" content="2016-10-28T06:48:02.000Z">
+<meta property="article:modified_time" content="2016-10-30T03:14:14.000Z">
+<meta property="article:author" content="Xuejian">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="自定义View">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.imwxj.cn/2016/10/28/Android%E5%AE%9E%E7%8E%B0%E4%BB%BF%E6%94%AF%E4%BB%98%E5%AE%9Dloading%E6%9D%A1/LoadingView.gif">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.imwxj.cn/2016/10/28/Android实现仿支付宝loading条/"/>
+
+
+
+
+
+  <title>Android实现仿支付宝loading条 | Gundam's Base</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Gundam's Base</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">瞎扯的地方</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.imwxj.cn/2016/10/28/Android%E5%AE%9E%E7%8E%B0%E4%BB%BF%E6%94%AF%E4%BB%98%E5%AE%9Dloading%E6%9D%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Xuejian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Gundam's Base">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android实现仿支付宝loading条</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-10-28T14:48:02+08:00">
+                2016-10-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <img src="/2016/10/28/Android%E5%AE%9E%E7%8E%B0%E4%BB%BF%E6%94%AF%E4%BB%98%E5%AE%9Dloading%E6%9D%A1/LoadingView.gif" class="">
+
+<a id="more"></a>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>首先这个loading条能看到的有三个状态:  </p>
+<ul>
+<li>√号消失（loading开始）</li>
+<li>圆圈转圈（loading中）</li>
+<li>圆圈和√号出现（loading结束）  </li>
+</ul>
+<p>即每个状态都要对应一个动画，其中转圈的动画是循环播放的。<br>流程图如下：</p>
+<img src="/2016/10/28/Android%E5%AE%9E%E7%8E%B0%E4%BB%BF%E6%94%AF%E4%BB%98%E5%AE%9Dloading%E6%9D%A1/process.png" class="" title="Process image">
+
+<h3 id="动画"><a href="#动画" class="headerlink" title="动画"></a>动画</h3><p>动画采用的是属性动画ValueAnimator，设置了三个动画，并为每个动画设置了监听。<br>监听器mUpdateListener在收到动画进度后进行重绘。  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">private void initListener() &#123;</span><br><span class="line">       mUpdateListener &#x3D; new ValueAnimator.AnimatorUpdateListener() &#123;</span><br><span class="line">           @Override</span><br><span class="line">           public void onAnimationUpdate(ValueAnimator animation) &#123;</span><br><span class="line">               mAnimatorValue &#x3D; (float) animation.getAnimatedValue();</span><br><span class="line">               invalidate(); &#x2F;&#x2F;得到当前进度，重绘</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;;</span><br><span class="line"></span><br><span class="line">       mAnimatorListener &#x3D; new Animator.AnimatorListener() &#123;</span><br><span class="line">           @Override</span><br><span class="line">           public void onAnimationStart(Animator animation) &#123;</span><br><span class="line"></span><br><span class="line">           &#125;</span><br><span class="line"></span><br><span class="line">           @Override</span><br><span class="line">           public void onAnimationEnd(Animator animation) &#123;</span><br><span class="line">               mAnimatorHandler.sendEmptyMessage(0);&#x2F;&#x2F;动画播放结束</span><br><span class="line">           &#125;</span><br><span class="line"></span><br><span class="line">           @Override</span><br><span class="line">           public void onAnimationCancel(Animator animation) &#123;</span><br><span class="line"></span><br><span class="line">           &#125;</span><br><span class="line"></span><br><span class="line">           @Override</span><br><span class="line">           public void onAnimationRepeat(Animator animation) &#123;</span><br><span class="line"></span><br><span class="line">           &#125;</span><br><span class="line">       &#125;;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>监听器mAnimatorListener在每个动画播放结束之后，发一个空消息给handler，handler再根据状态判断下一个要播放哪一个动画或者结束：  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">private void initHandler() &#123;</span><br><span class="line">       mAnimatorHandler &#x3D; new Handler() &#123;</span><br><span class="line">           @Override</span><br><span class="line">           public void handleMessage(Message msg) &#123;</span><br><span class="line">               super.handleMessage(msg);</span><br><span class="line">               switch (mCurrentState) &#123;</span><br><span class="line">                   case STARTING:</span><br><span class="line">                       mCurrentState &#x3D; LOADING;</span><br><span class="line">                       mLoadingAnimator.start(); &#x2F;&#x2F; 从开始动画转换到搜索动画</span><br><span class="line">                       break;</span><br><span class="line">                   case LOADING:</span><br><span class="line">                       if (isLoading) &#123;&#x2F;&#x2F;如果还在loading，继续播放动画</span><br><span class="line">                           mLoadingAnimator.start();</span><br><span class="line">                           &#x2F;&#x2F; Log.e(TAG, &quot;Restart&quot;);</span><br><span class="line">                       &#125; else &#123;</span><br><span class="line">                           mCurrentState &#x3D; ENDING;</span><br><span class="line">                           mEndingAnimator.start();</span><br><span class="line">                       &#125;</span><br><span class="line">                       break;</span><br><span class="line">                   case ENDING:</span><br><span class="line">                       mCurrentState &#x3D; NONE;</span><br><span class="line">                       setVisibility(GONE);</span><br><span class="line">                       break;</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="绘制"><a href="#绘制" class="headerlink" title="绘制"></a>绘制</h3><h4 id="绘制path"><a href="#绘制path" class="headerlink" title="绘制path"></a>绘制path</h4><p>其实就是两个path，一个钩子和一个圈，其中钩子的右上角跟圈重合</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">private void initPath() &#123;</span><br><span class="line">        mMeasure &#x3D; new PathMeasure();</span><br><span class="line"></span><br><span class="line">        path_circle &#x3D; new Path();&#x2F;&#x2F;外部圆环</span><br><span class="line">        path_tick &#x3D; new Path();&#x2F;&#x2F;钩子</span><br><span class="line"></span><br><span class="line">        float radius &#x3D; 100f;&#x2F;&#x2F;半径</span><br><span class="line"></span><br><span class="line">        RectF rectF &#x3D; new RectF(-radius, -radius, radius, radius);</span><br><span class="line">        path_circle.addArc(rectF, 330, 359.9f);</span><br><span class="line"></span><br><span class="line">        mMeasure.setPath(path_circle, false);</span><br><span class="line"></span><br><span class="line">        float[] pos &#x3D; new float[2];</span><br><span class="line">        mMeasure.getPosTan(0, pos, null);&#x2F;&#x2F;得到圆形起点的坐标</span><br><span class="line"></span><br><span class="line">        path_tick.moveTo(-radius &#x2F; 2 * 1.1f, 0);&#x2F;&#x2F;钩子左边</span><br><span class="line">        path_tick.lineTo(0, radius &#x2F; 2 * 1.03f);</span><br><span class="line">        path_tick.lineTo(pos[0], pos[1]);&#x2F;&#x2F;钩子右边</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="onDraw"><a href="#onDraw" class="headerlink" title="onDraw"></a>onDraw</h4><p>直接上onDraw的代码吧</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">protected void onDraw(Canvas canvas) &#123;</span><br><span class="line">    super.onDraw(canvas);</span><br><span class="line">    canvas.translate(width &#x2F; 2, height &#x2F; 2);&#x2F;&#x2F;画布移到中间</span><br><span class="line">    &#x2F;&#x2F;  Log.e(TAG, &quot;onDraw&quot;);</span><br><span class="line">    switch (mCurrentState) &#123;</span><br><span class="line">        case NONE:</span><br><span class="line">            break;</span><br><span class="line">        case STARTING:</span><br><span class="line">            mMeasure.setPath(path_tick, false);</span><br><span class="line">            Path dst &#x3D; new Path();</span><br><span class="line">            &#x2F;&#x2F;Log.e(TAG, &quot;mMeasure.getLength() ：&quot; + mMeasure.getLength());</span><br><span class="line">            &#x2F;&#x2F;Log.e(TAG, &quot;mAnimatorValue&quot; + mAnimatorValue);</span><br><span class="line">            &#x2F;&#x2F;钩子的起点从左边往右边缩减，终点不变</span><br><span class="line">            mMeasure.getSegment(mMeasure.getLength() * mAnimatorValue, mMeasure.getLength(), dst, true);</span><br><span class="line">            canvas.drawPath(dst, mPaint);</span><br><span class="line">            break;</span><br><span class="line">        case LOADING:</span><br><span class="line">            &#x2F;&#x2F;Log.e(TAG, &quot;LOADING&quot;);</span><br><span class="line">            mMeasure.setPath(path_circle, false);</span><br><span class="line">            Path dst2 &#x3D; new Path();</span><br><span class="line">            &#x2F;&#x2F;圆圈终点为动画进度</span><br><span class="line">            float stop &#x3D; mMeasure.getLength() * mAnimatorValue;</span><br><span class="line">            &#x2F;&#x2F; 小尾巴长度 length &#x3D; stop - start &#x3D; (0.5 - Math.abs(mAnimatorValue - 0.5)) * 200f</span><br><span class="line">            &#x2F;&#x2F; (0.5 - Math.abs(mAnimatorValue - 0.5)) 在中点的时候为0.5，起点和终点为0</span><br><span class="line">            &#x2F;&#x2F; 所以小尾巴长度在起点和终点为0，最大在中点，为100f</span><br><span class="line">            float start &#x3D; (float) (stop - ((0.5 - Math.abs(mAnimatorValue - 0.5)) * 200f));</span><br><span class="line">            &#x2F;&#x2F;Log.e(TAG, &quot;start：&quot; + start + &quot;\nstop:&quot; + stop + &quot;\nlength:&quot; + (stop - start));</span><br><span class="line">            mMeasure.getSegment(start, stop, dst2, true);</span><br><span class="line">            canvas.drawPath(dst2, mPaint);</span><br><span class="line">            break;</span><br><span class="line">        case ENDING:</span><br><span class="line">            &#x2F;&#x2F;Log.e(TAG, &quot;ENDING&quot;);</span><br><span class="line">            mMeasure.setPath(path_tick, false);</span><br><span class="line">            Path dst3 &#x3D; new Path();</span><br><span class="line">            mMeasure.getSegment(mMeasure.getLength() * mAnimatorValue, mMeasure.getLength(), dst3, true);</span><br><span class="line">            canvas.drawPath(dst3, mPaint);</span><br><span class="line">            mMeasure.setPath(path_circle, false);</span><br><span class="line">            Path dst4 &#x3D; new Path();</span><br><span class="line">            mMeasure.getSegment(0, mMeasure.getLength() * (1 - mAnimatorValue), dst4, true);</span><br><span class="line">            canvas.drawPath(dst4, mPaint);</span><br><span class="line">            break;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><p>LoadingView中公开了一个方法，设置是否需要loading，所以实际使用中只需把view添加到布局，并给它发开始和结束的信号就行了。<br>LoadingView中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public void setIsLoading(boolean isLoading) &#123;</span><br><span class="line">        Log.e(TAG, &quot;setIsLoading: &quot; + isLoading);</span><br><span class="line">        this.isLoading &#x3D; isLoading;</span><br><span class="line">        if (isLoading) &#123;</span><br><span class="line">            setVisibility(VISIBLE);</span><br><span class="line">            mCurrentState &#x3D; STARTING;</span><br><span class="line">            mStartingAnimator.start();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>Activity中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">public void showLoading() &#123;</span><br><span class="line">    if (loadingView &#x3D;&#x3D; null) &#123;</span><br><span class="line">        loadingView &#x3D; createLoadingView(this);</span><br><span class="line">    &#125;</span><br><span class="line">    loadingView.setIsLoading(true);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public void hideLoading() &#123;</span><br><span class="line">    if (loadingView !&#x3D; null) &#123;</span><br><span class="line">        loadingView.setIsLoading(false);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;**</span><br><span class="line"> * 创建一个LoadingView</span><br><span class="line"> * @param context</span><br><span class="line"> * @return LoadingView</span><br><span class="line"> *&#x2F;</span><br><span class="line">private LoadingView createLoadingView(Context context) &#123;</span><br><span class="line">    LoadingView loadingView &#x3D; new LoadingView(context);</span><br><span class="line">    FrameLayout frameLayout &#x3D; (FrameLayout) findViewById(android.R.id.content);</span><br><span class="line">    FrameLayout.LayoutParams layoutParams &#x3D; new FrameLayout.LayoutParams(</span><br><span class="line">            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,</span><br><span class="line">            Gravity.CENTER);</span><br><span class="line">    loadingView.setLayoutParams(layoutParams);</span><br><span class="line">    frameLayout.addView(loadingView);</span><br><span class="line">    return loadingView;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中LoadingView的大小我写死了，如果需要根据view的大小确定某些属性的话，一些相关的方法就得写在onSizeChanged()之后了。<br>此时请记得设置一个flag判断是否第一次进行，因为第一次进行的时候，setIsLoading()方法会比onSizeChange()快，导致出现一些错误。</p>
+<h3 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h3><p><a href="https://github.com/OLieWaGundam/LoadingView" target="_blank" rel="noopener">源码下载</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/%E8%87%AA%E5%AE%9A%E4%B9%89View/" rel="tag"># 自定义View</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/10/13/HelloWorld/" rel="next" title="HelloWorld">
+                <i class="fa fa-chevron-left"></i> HelloWorld
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/10/30/Android%E5%AE%9E%E7%8E%B0%E5%BF%83%E7%94%B5%E5%9B%BE%E6%95%88%E6%9E%9C/" rel="prev" title="Android实现心电图效果">
+                Android实现心电图效果 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.png"
+                alt="Xuejian" />
+            
+              <p class="site-author-name" itemprop="name">Xuejian</p>
+              <p class="site-description motion-element" itemprop="description">BAT拧螺丝的</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/OLieWaGundam" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://twitter.com/Wxj233" target="_blank" title="Twitter">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Twitter</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="http://weibo.com/2436310322" target="_blank" title="Weibo">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Weibo</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://www.zhihu.com/people/wu-jie-chao-14" target="_blank" title="知乎">
+                      
+                        <i class="fa fa-fw fa-globe"></i>知乎</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#实现"><span class="nav-number">1.</span> <span class="nav-text">实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#动画"><span class="nav-number">1.1.</span> <span class="nav-text">动画</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#绘制"><span class="nav-number">1.2.</span> <span class="nav-text">绘制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#绘制path"><span class="nav-number">1.2.1.</span> <span class="nav-text">绘制path</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#onDraw"><span class="nav-number">1.2.2.</span> <span class="nav-text">onDraw</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用"><span class="nav-number">1.3.</span> <span class="nav-text">使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#源码"><span class="nav-number">1.4.</span> <span class="nav-text">源码</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Xuejian</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

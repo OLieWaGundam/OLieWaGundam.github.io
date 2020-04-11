@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/function%20small()%20%7B%20%5Bnative%20code%5D%20%7D?v=5.1.4">
+
+
+
+
+
+
+  <meta name="keywords" content="Linux,环境," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言模拟dns劫持，说白了就是让客户端向dns服务器发送dns请求时返回指定的ip，而这里针对的是发送wifi让手机连接的路由器，本次实验主要尝试了下面四种做法，其中最后一种成功，可以直接跳过看配置过程。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ubuntu虚拟机+dnsmasq模拟dns劫持">
+<meta property="og:url" content="http://www.imwxj.cn/2017/07/28/Ubuntu%E8%99%9A%E6%8B%9F%E6%9C%BA+dnsmasq%E6%A8%A1%E6%8B%9Fdns%E5%8A%AB%E6%8C%81/index.html">
+<meta property="og:site_name" content="Gundam&#39;s Base">
+<meta property="og:description" content="前言模拟dns劫持，说白了就是让客户端向dns服务器发送dns请求时返回指定的ip，而这里针对的是发送wifi让手机连接的路由器，本次实验主要尝试了下面四种做法，其中最后一种成功，可以直接跳过看配置过程。">
+<meta property="og:image" content="http://osnyzf7ny.bkt.clouddn.com/dnsmasq-flowchart.png">
+<meta property="og:image" content="http://osnyzf7ny.bkt.clouddn.com/lsof%20-i.png">
+<meta property="og:image" content="http://osnyzf7ny.bkt.clouddn.com/dnsmasq-tplink-wan.png">
+<meta property="og:image" content="http://osnyzf7ny.bkt.clouddn.com/pingbaidu.png">
+<meta property="og:image" content="http://osnyzf7ny.bkt.clouddn.com/chrome-baidu.png">
+<meta property="article:published_time" content="2017-07-28T13:11:26.000Z">
+<meta property="article:modified_time" content="2017-07-28T14:17:18.000Z">
+<meta property="article:author" content="Xuejian">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="环境">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://osnyzf7ny.bkt.clouddn.com/dnsmasq-flowchart.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.imwxj.cn/2017/07/28/Ubuntu虚拟机+dnsmasq模拟dns劫持/"/>
+
+
+
+
+
+  <title>Ubuntu虚拟机+dnsmasq模拟dns劫持 | Gundam's Base</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Gundam's Base</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">瞎扯的地方</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.imwxj.cn/2017/07/28/Ubuntu%E8%99%9A%E6%8B%9F%E6%9C%BA+dnsmasq%E6%A8%A1%E6%8B%9Fdns%E5%8A%AB%E6%8C%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Xuejian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Gundam's Base">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Ubuntu虚拟机+dnsmasq模拟dns劫持</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-28T21:11:26+08:00">
+                2017-07-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" itemprop="url" rel="index">
+                    <span itemprop="name">环境搭建</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>模拟dns劫持，说白了就是让客户端向dns服务器发送dns请求时返回指定的ip，而这里针对的是发送wifi让手机连接的路由器，本次实验主要尝试了下面四种做法，其中最后一种成功，可以直接跳过看配置过程。</p>
+<a id="more"></a>
+<h2 id="搭建环境"><a href="#搭建环境" class="headerlink" title="搭建环境"></a>搭建环境</h2><ul>
+<li>Ubuntu 16.04</li>
+<li>ens33（eth0）：连接外网</li>
+<li>ens38（eth1）：连接路由器的wan口，192.168.95.1</li>
+<li>TP-LINK无线路由器</li>
+</ul>
+<h2 id="尝试"><a href="#尝试" class="headerlink" title="尝试"></a>尝试</h2><h3 id="直接修改linux的host"><a href="#直接修改linux的host" class="headerlink" title="直接修改linux的host"></a>直接修改linux的host</h3><ul>
+<li>过程：以把路由器的wan设置dns指向linux，然后修改linux的host。   </li>
+<li>结果：linux自身生效，但是手机无效。  </li>
+<li>猜测原因：由于linux自身不是dns服务器，而这个环境的上网方式是通过ip包转发到有线连接的网卡，所以我觉得应该是linux把dns的请求转发到网卡设置的dns服务器了。</li>
+<li>结论：此路不通</li>
+</ul>
+<h3 id="使用ettercap监听网卡做dns欺骗"><a href="#使用ettercap监听网卡做dns欺骗" class="headerlink" title="使用ettercap监听网卡做dns欺骗"></a>使用ettercap监听网卡做dns欺骗</h3><ul>
+<li>ettercap是一个入侵攻击工具，可以以中间人的形式做arp和dns欺骗，比如写一个钓鱼网站返回给被攻击者，或者比如整蛊公用一个局域网的邻居(<a href="http://www.cnblogs.com/hkleak/p/5043063.html" target="_blank" rel="noopener">隔壁的哥们轻一点</a>)。</li>
+<li>过程：扫描网卡选择ens38，修改dns配置，选择dns欺骗的补丁，开始欺骗。</li>
+<li>结果：成功进行dns欺骗，但是手机上不了网了。</li>
+<li>猜测原因：ettercap本来的使用环境就是攻击局域网内的其他主机，通过扫描网卡所在区域的局域网获得主机，然后选择设备和网关进行中间人欺骗。而我的所在环境是路由器的wan口直接连到我的网卡，直接扫描那个网卡的话，只有路由器一个设备，而且他也需要开启ip转发，我觉得是让dns的包先到攻击者的设备，然后攻击者再转发到局域网的网关，因此我的这个场景不适用。</li>
+<li>结论：如果操作环境是在局域网内，这个方式应该是最简便的，不用架设服务器，也不用对被欺骗者做任何操作。</li>
+<li>参考链接：<a href="http://www.secbox.cn/hacker/web/4728.html" target="_blank" rel="noopener">Ubuntu下ettercap进行DNS内网DNS劫持</a></li>
+</ul>
+<h3 id="使用bind9搭建dns服务器"><a href="#使用bind9搭建dns服务器" class="headerlink" title="使用bind9搭建dns服务器"></a>使用bind9搭建dns服务器</h3><ul>
+<li>过程：参照网上教程和wiki搭建了一个dns服务器，编写数据库文件，写dns的正向解析和反向解析，把路由器的dns指向linux的ip地址。</li>
+<li>结果：dns请求失败，用wireshark抓包发现，dns请求是通过udp 53端口发送的而linux对路由器的请求返回了ICMP的报文，内容是端口不可达/未开放。尝试配置iptables开启接收tcp和udp53端口，仍然不可达。使用命令sudo lsof -i :53，发现dnsmasq在占用localhost的53端口，查阅资料发现我的ubuntu系统是自带dnsmasq的，于是在调试过程中转战dnsmasq了。</li>
+<li>结论：bind9应该是可以实现的，但是过程比较复杂，dnsmasq相对简单很多。</li>
+<li>参考链接：<a href="http://wiki.ubuntu.org.cn/Bind9%E5%AE%89%E8%A3%85%E8%AE%BE%E7%BD%AE%E6%8C%87%E5%8D%97" target="_blank" rel="noopener">Ubuntu Wiki:Bind9安装设置指南</a></li>
+</ul>
+<p>以上三种方式是我的探索过程，最后是使用dnsmasq搭建dns缓存服务器成功了。下面来讲一下如何用dnsmasq模拟dns劫持。</p>
+<h1 id="使用dnsmasq模拟dns劫持"><a href="#使用dnsmasq模拟dns劫持" class="headerlink" title="使用dnsmasq模拟dns劫持"></a>使用dnsmasq模拟dns劫持</h1><h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>dnsmasq是小工具，可以作为一个dns查询服务器，可以提供以下几个功能：</p>
+<ul>
+<li>提供dns服务</li>
+<li>优先使用本地自定义dns</li>
+<li>提供dhcp服务  </li>
+</ul>
+<p>而我搭建的dns缓存服务器使用场景一般是用来加速dns的请求的，它处理dns请求的过程如下：<br><img src="http://osnyzf7ny.bkt.clouddn.com/dnsmasq-flowchart.png" alt="dnsmasq-flowchart"><br>我们只需要修改host或者自定义host（如果你选择使用自定义host代替了自定义host），就可以做到模拟dns劫持了。</p>
+<h2 id="搭建过程"><a href="#搭建过程" class="headerlink" title="搭建过程"></a>搭建过程</h2><ul>
+<li>注：本次搭建全程使用root</li>
+</ul>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install dnsmasq</span><br></pre></td></tr></table></figure>
+
+<h3 id="配置本地dns服务器"><a href="#配置本地dns服务器" class="headerlink" title="配置本地dns服务器"></a>配置本地dns服务器</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim &#x2F;etc&#x2F;resolv.conf</span><br></pre></td></tr></table></figure>
+<p>修改为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nameserver 127.0.0.1</span><br></pre></td></tr></table></figure>
+<p>也就是用本机做dns服务器</p>
+<h3 id="添加上游服务器"><a href="#添加上游服务器" class="headerlink" title="添加上游服务器"></a>添加上游服务器</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim &#x2F;etc&#x2F;resolv.dnsmasq.conf</span><br></pre></td></tr></table></figure>
+<p>修改为你用的dns服务器，比如8.8.8.8</p>
+<h3 id="修改dnsmasq配置文件"><a href="#修改dnsmasq配置文件" class="headerlink" title="修改dnsmasq配置文件"></a>修改dnsmasq配置文件</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim &#x2F;etc&#x2F;dnsmasq.conf</span><br></pre></td></tr></table></figure>
+<p>找到resolv-file=<br>去掉注释，修改为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">resolv-file&#x3D;&#x2F;etc&#x2F;resolv.dnsmasq.conf</span><br></pre></td></tr></table></figure>
+<p>也就是指定上游服务器的文件  </p>
+<p>再找到listen-address这几行，修改为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"># If you want dnsmasq to listen for DHCP and DNS requests only on</span><br><span class="line"># specified interfaces (and the loopback) give the name of the</span><br><span class="line"># interface (eg eth0) here.</span><br><span class="line"># Repeat the line for more than one interface.</span><br><span class="line">interface&#x3D;ens38</span><br><span class="line"># Or you can specify which interface _not_ to listen on</span><br><span class="line">#except-interface&#x3D;</span><br><span class="line"># Or which to listen on by address (remember to include 127.0.0.1 if</span><br><span class="line"># you use this.)</span><br><span class="line">listen-address&#x3D;192.168.95.1,127.0.0.1</span><br><span class="line"># If you want dnsmasq to provide only DNS service on an interface,</span><br><span class="line"># configure it as shown above, and then use the following line to</span><br><span class="line"># disable DHCP and TFTP on it.</span><br><span class="line">#no-dhcp-interface&#x3D;</span><br></pre></td></tr></table></figure>
+<p>也就是监听本机以及网卡的dns请求。</p>
+<p>此时输入命令sudo lsof -i :53，应该可以看到53端口的监听情况：</p>
+<p><img src="http://osnyzf7ny.bkt.clouddn.com/lsof%20-i.png" alt="lsof -i :53">  </p>
+<p>可见dnsmasq依据监听了连接路由器网卡的dns请求</p>
+<p>查看配置文件语法是否正确，可执行下列命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dnsmasq --test</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="修改NetworkManager-conf文件"><a href="#修改NetworkManager-conf文件" class="headerlink" title="修改NetworkManager.conf文件"></a>修改NetworkManager.conf文件</h3><p>据说是因为本机自带dnsmasq，所以需要做一些修改。  </p>
+<p>“对于12.04版本<br>由于该版本已经安装dnsmasq-base，则必须先修改/etc/NetworkManager/NetworkManager.conf文件”———<a href="http://mydf.github.io/blog/ubuntu-dnsmasq/" target="_blank" rel="noopener">Ubuntu使用dnsmasq作本地DNS缓存</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim &#x2F;etc&#x2F;NetworkManager&#x2F;NetworkManager.conf</span><br></pre></td></tr></table></figure>
+<p>找到dns=dnsmasq，在前面增加“#”，也就是把这句注释掉。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim &#x2F;etc&#x2F;default&#x2F;dnsmasq</span><br></pre></td></tr></table></figure>
+<p>找到IGNORE_RESOLVCONF=yes，这一条要删除注释，删掉#号。</p>
+<h3 id="修改host文件模拟dns劫持"><a href="#修改host文件模拟dns劫持" class="headerlink" title="修改host文件模拟dns劫持"></a>修改host文件模拟dns劫持</h3><p>这里采用的是本机的host，你也可以修改配置文件使用dnsmasq的host，据说可以使用通配符，比如*.baidu.com可以劫持以baidu.com结尾的dns请求，不过这里追求简便未做配置。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim &#x2F;etc&#x2F;hosts</span><br></pre></td></tr></table></figure>
+<p>比如把百度劫持成其他的ip</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1.1.1.1 www.baidu.com</span><br></pre></td></tr></table></figure>
+
+<p>修改完成后重启dnsmasq</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service dnsmasq restart</span><br></pre></td></tr></table></figure>
+
+<p>测试结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu:&#x2F;etc# dig www.baidu.com</span><br><span class="line"></span><br><span class="line">; &lt;&lt;&gt;&gt; DiG 9.10.3-P4-Ubuntu &lt;&lt;&gt;&gt; www.baidu.com</span><br><span class="line">;; global options: +cmd</span><br><span class="line">;; Got answer:</span><br><span class="line">;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 59087</span><br><span class="line">;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1</span><br><span class="line"></span><br><span class="line">;; OPT PSEUDOSECTION:</span><br><span class="line">; EDNS: version: 0, flags:; udp: 1280</span><br><span class="line">;; QUESTION SECTION:</span><br><span class="line">;www.baidu.com.			IN	A</span><br><span class="line"></span><br><span class="line">;; ANSWER SECTION:</span><br><span class="line">www.baidu.com.		0	IN	A	1.1.1.1</span><br><span class="line"></span><br><span class="line">;; Query time: 0 msec</span><br><span class="line">;; SERVER: 127.0.0.1#53(127.0.0.1)</span><br><span class="line">;; WHEN: Fri Jul 28 14:54:17 CST 2017</span><br><span class="line">;; MSG SIZE  rcvd: 58</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="修改路由器配置"><a href="#修改路由器配置" class="headerlink" title="修改路由器配置"></a>修改路由器配置</h3><p>把路由器的wan口dns指向连接它的网卡的ip地址，比如我的是192.168.95.1。<br><img src="http://osnyzf7ny.bkt.clouddn.com/dnsmasq-tplink-wan.png" alt="image"><br>至于DHCP的dns服务器，我试过写成了路由器的静态ip地址192.168.95.2。结果发现手机的dns服务器变成了主192.168.95.1，副192.168.95.2，然后我删掉修改的话，主dns服务器不变，副dns服务器是变成192.168.1.1，不影响结果。因此不需要配置。</p>
+<h3 id="测试结果"><a href="#测试结果" class="headerlink" title="测试结果"></a>测试结果</h3><p><img src="http://osnyzf7ny.bkt.clouddn.com/pingbaidu.png" alt="image"></p>
+<h1 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h1><p>实验过程中围绕劫持baidu的dns还发现了几个比较有意思的点。</p>
+<h2 id="浏览器的安全问题"><a href="#浏览器的安全问题" class="headerlink" title="浏览器的安全问题"></a>浏览器的安全问题</h2><p> 这里要赞一赞Chrome，把百度的host修改了成了某个自建网站后，浏览器提示连接不安全，不让访问了，同样的情况在手机浏览器（我用的是夸克浏览器）上，却正常访问了不正确的网页。<br><img src="http://osnyzf7ny.bkt.clouddn.com/chrome-baidu.png" alt="chrome-baidu"><br>点击隐藏详情还可以发现dns解析的结果域名</p>
+<h2 id="华为wifi提示登录的问题"><a href="#华为wifi提示登录的问题" class="headerlink" title="华为wifi提示登录的问题"></a>华为wifi提示登录的问题</h2><p> 修改了host后，我发现手机（emui4.0.1）老是提示让我登录wifi，点进去发现居然是我修改成的百度指向的网站，再把百度的host改回去之后，这种情况不再出现。由此猜测华为应该是连接wifi后自动去访问百度，如果返回是不正确的百度网页则会提示让你登录wifi，这种情况在OPPO、三星和iPhone都没有出现，其他的并未测试。</p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ul>
+<li><a href="https://wiki.archlinux.org/index.php/Dnsmasq_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)" target="_blank" rel="noopener">dnsmasq (简体中文)</a></li>
+<li><a href="http://mydf.github.io/blog/ubuntu-dnsmasq/" target="_blank" rel="noopener">Ubuntu使用dnsmasq作本地DNS缓存</a></li>
+<li><a href="http://wiki.ubuntu.org.cn/%E4%BD%BF%E7%94%A8%E6%9C%AC%E5%9C%B0DNS%E5%8A%A0%E9%80%9F%E7%BD%91%E7%BB%9C%E8%AE%BF%E9%97%AE" target="_blank" rel="noopener">Ubuntu wiki:使用本地DNS加速网络访问</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+            <a href="/tags/%E7%8E%AF%E5%A2%83/" rel="tag"># 环境</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/07/25/%E5%8F%8C%E7%BD%91%E5%8D%A1%E4%B8%BB%E6%9C%BA-Ubuntu%E8%99%9A%E6%8B%9F%E6%9C%BA-%E6%97%A0%E7%BA%BF%E8%B7%AF%E7%94%B1%E5%99%A8%E6%9E%84%E5%BB%BAwifi%E6%B5%8B%E8%AF%95%E7%8E%AF%E5%A2%83/" rel="next" title="双网卡主机+Ubuntu虚拟机+无线路由器构建wifi测试环境">
+                <i class="fa fa-chevron-left"></i> 双网卡主机+Ubuntu虚拟机+无线路由器构建wifi测试环境
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.png"
+                alt="Xuejian" />
+            
+              <p class="site-author-name" itemprop="name">Xuejian</p>
+              <p class="site-description motion-element" itemprop="description">BAT拧螺丝的</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/OLieWaGundam" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://twitter.com/Wxj233" target="_blank" title="Twitter">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Twitter</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="http://weibo.com/2436310322" target="_blank" title="Weibo">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Weibo</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://www.zhihu.com/people/wu-jie-chao-14" target="_blank" title="知乎">
+                      
+                        <i class="fa fa-fw fa-globe"></i>知乎</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#搭建环境"><span class="nav-number">1.1.</span> <span class="nav-text">搭建环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#尝试"><span class="nav-number">1.2.</span> <span class="nav-text">尝试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#直接修改linux的host"><span class="nav-number">1.2.1.</span> <span class="nav-text">直接修改linux的host</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用ettercap监听网卡做dns欺骗"><span class="nav-number">1.2.2.</span> <span class="nav-text">使用ettercap监听网卡做dns欺骗</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用bind9搭建dns服务器"><span class="nav-number">1.2.3.</span> <span class="nav-text">使用bind9搭建dns服务器</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用dnsmasq模拟dns劫持"><span class="nav-number">2.</span> <span class="nav-text">使用dnsmasq模拟dns劫持</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#原理"><span class="nav-number">2.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#搭建过程"><span class="nav-number">2.2.</span> <span class="nav-text">搭建过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装"><span class="nav-number">2.2.1.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#配置本地dns服务器"><span class="nav-number">2.2.2.</span> <span class="nav-text">配置本地dns服务器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#添加上游服务器"><span class="nav-number">2.2.3.</span> <span class="nav-text">添加上游服务器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修改dnsmasq配置文件"><span class="nav-number">2.2.4.</span> <span class="nav-text">修改dnsmasq配置文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修改NetworkManager-conf文件"><span class="nav-number">2.2.5.</span> <span class="nav-text">修改NetworkManager.conf文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修改host文件模拟dns劫持"><span class="nav-number">2.2.6.</span> <span class="nav-text">修改host文件模拟dns劫持</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修改路由器配置"><span class="nav-number">2.2.7.</span> <span class="nav-text">修改路由器配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试结果"><span class="nav-number">2.2.8.</span> <span class="nav-text">测试结果</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#后记"><span class="nav-number">3.</span> <span class="nav-text">后记</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#浏览器的安全问题"><span class="nav-number">3.1.</span> <span class="nav-text">浏览器的安全问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#华为wifi提示登录的问题"><span class="nav-number">3.2.</span> <span class="nav-text">华为wifi提示登录的问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考资料"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Xuejian</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

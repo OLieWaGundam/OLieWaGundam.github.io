@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/function%20small()%20%7B%20%5Bnative%20code%5D%20%7D?v=5.1.4">
+
+
+
+
+
+
+  <meta name="keywords" content="Android,Jenkins," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言前几天在Jenkins中集合了Lint的环境后，导师要求把FindBugs和CheckStyle也集成上去，于是再写了一篇集合三个插件的总结。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Jenkins使用Lint、Checkstyle和FindBugs进行Android代码静态分析">
+<meta property="og:url" content="http://www.imwxj.cn/2017/07/12/Jenkins%E4%BD%BF%E7%94%A8Lint%E3%80%81Checkstyle%E5%92%8CFindBugs%E8%BF%9B%E8%A1%8CAndroid%E4%BB%A3%E7%A0%81%E9%9D%99%E6%80%81%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="Gundam&#39;s Base">
+<meta property="og:description" content="前言前几天在Jenkins中集合了Lint的环境后，导师要求把FindBugs和CheckStyle也集成上去，于是再写了一篇集合三个插件的总结。">
+<meta property="og:image" content="https://developer.android.com/studio/images/write/lint.png?hl=zh-cn">
+<meta property="og:image" content="http://osnyzf7ny.bkt.clouddn.com/URI%20is%20not%20registered.png">
+<meta property="og:image" content="http://osnyzf7ny.bkt.clouddn.com/lint-build.png">
+<meta property="og:image" content="http://osnyzf7ny.bkt.clouddn.com/after-lint.png">
+<meta property="og:image" content="http://osnyzf7ny.bkt.clouddn.com/pollscm.png">
+<meta property="article:published_time" content="2017-07-12T14:18:59.000Z">
+<meta property="article:modified_time" content="2017-07-25T13:26:22.000Z">
+<meta property="article:author" content="Xuejian">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="Jenkins">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://developer.android.com/studio/images/write/lint.png?hl=zh-cn">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.imwxj.cn/2017/07/12/Jenkins使用Lint、Checkstyle和FindBugs进行Android代码静态分析/"/>
+
+
+
+
+
+  <title>Jenkins使用Lint、Checkstyle和FindBugs进行Android代码静态分析 | Gundam's Base</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Gundam's Base</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">瞎扯的地方</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.imwxj.cn/2017/07/12/Jenkins%E4%BD%BF%E7%94%A8Lint%E3%80%81Checkstyle%E5%92%8CFindBugs%E8%BF%9B%E8%A1%8CAndroid%E4%BB%A3%E7%A0%81%E9%9D%99%E6%80%81%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Xuejian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Gundam's Base">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Jenkins使用Lint、Checkstyle和FindBugs进行Android代码静态分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-12T22:18:59+08:00">
+                2017-07-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" itemprop="url" rel="index">
+                    <span itemprop="name">环境搭建</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>前几天在Jenkins中集合了Lint的环境后，导师要求把FindBugs和CheckStyle也集成上去，于是再写了一篇集合三个插件的总结。</p>
+<a id="more"></a>
+<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><h2 id="Lint"><a href="#Lint" class="headerlink" title="Lint"></a>Lint</h2><p>Lint 是Android Studio提供的的代码扫描工具，可帮助您发现并纠正代码结构质量的问题，而无需实际执行该应用，也不必编写测试用例。<br>该工具会报告其检测到的每个问题并提供该问题的描述消息和严重级别，以便您可以快速确定需要优先进行哪些关键改进。此外，您可以调低问题的严重级别，忽略与项目无关的问题，也可以调高严重级别，以突出特定问题。<br><img src="https://developer.android.com/studio/images/write/lint.png?hl=zh-cn" alt="image"></p>
+<p>在Android SDK Tools 16及更高的版本中，Lint工具会自动安装，因此我们不需要配置即可在命令行中输入”gradlew lint”直接使用。当然，你也可以自定义lint的规则。</p>
+<h3 id="Android-Lint-Plugin"><a href="#Android-Lint-Plugin" class="headerlink" title="Android Lint Plugin"></a>Android Lint Plugin</h3><p>Jenkins的一个基于静态代码分析插件的插件，值得注意的是，此插件不会帮你运行lint检查，它只是解析Lint运行之后产生的xml文件，然后再用一定的形式展示出来，而它要解析的xml文件，需要调用gradle lint的命令去生成。下文中Checkstyle和FindBugs的插件也是如此，因此不再叙述。</p>
+<h2 id="Checkstyle"><a href="#Checkstyle" class="headerlink" title="Checkstyle"></a>Checkstyle</h2><p>一种静态代码分析工具，用来检查Java源代码是否匹配编码规则，也可编写自定义的规范，可检查以下问题：</p>
+<ul>
+<li>类、属性和方法的Javadoc；</li>
+<li>属性和方法的命名规范；</li>
+<li>函数参数数量、代码行的长度的限制；</li>
+<li>标题是否存在；</li>
+<li>包的导入、类、访问控制修饰符、代码块的使用；</li>
+<li>字符间的间隔；</li>
+<li>重复代码；</li>
+<li>代码中多种复杂度的度量  </li>
+</ul>
+<p>在Android Studio中使用需要相关配置文件，以及在build.gradle引入相关task。</p>
+<h2 id="FindBugs"><a href="#FindBugs" class="headerlink" title="FindBugs"></a>FindBugs</h2><p>FindBugs是由Bill Pugh和David Hovemeyer创建的开源程序，用来查找Java代码中的程序错误。它检查类或者 JAR 文件，将字节码与一组缺陷模式进行对比以发现可能的问，操作的是Java字节码而非源代码。<br>在Android Studio中使用需要相关配置文件，以及在build.gradle引入相关task。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://developer.android.com/studio/write/lint.html" target="_blank" rel="noopener">使用 Lint 改进您的代码</a></li>
+<li><a href="http://checkstyle.sourceforge.net/" target="_blank" rel="noopener">checkstyle</a></li>
+<li><a href="http://findbugs.sourceforge.net/" target="_blank" rel="noopener">FindBugs™ - Find Bugs in Java Programs</a></li>
+<li><a href="https://wiki.jenkins.io/display/JENKINS/Android+Lint+Plugin" target="_blank" rel="noopener">AndroidLintPlugin</a></li>
+<li><a href="https://wiki.jenkins.io/display/JENKINS/Android+Lint+Plugin" target="_blank" rel="noopener">Checkstyle Plugin</a></li>
+<li><a href="https://wiki.jenkins.io/display/JENKINS/Android+Lint+Plugin" target="_blank" rel="noopener">FindBugs Plugin</a></li>
+</ul>
+<h1 id="项目中的配置"><a href="#项目中的配置" class="headerlink" title="项目中的配置"></a>项目中的配置</h1><h2 id="配置Lint"><a href="#配置Lint" class="headerlink" title="配置Lint"></a>配置Lint</h2><p>在Android SDK Tools 16及更高的版本中，Lint工具会自动安装，因此我们不需要配置即可在命令行中输入”gradlew lint”直接使用。当然，你也可以自定义lint的规则。</p>
+<h2 id="配置CheckStyle"><a href="#配置CheckStyle" class="headerlink" title="配置CheckStyle"></a>配置CheckStyle</h2><h3 id="修改build-gradle"><a href="#修改build-gradle" class="headerlink" title="修改build.gradle"></a>修改build.gradle</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">apply plugin: &#39;checkstyle&#39;&#x2F;&#x2F;添加Plugin</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 定义生成文件目录</span><br><span class="line">def checkStyleReportPath &#x3D; &quot;$&#123;project.rootDir&#125;&#x2F;app&#x2F;build&#x2F;reports&#x2F;&quot;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 在clean时候，自动删除原先生成报告</span><br><span class="line">clean.doFirst &#123;</span><br><span class="line">    delete checkStyleReportPath</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">task checkStyle(type: Checkstyle) &#123;</span><br><span class="line">    source &#39;src&#39;</span><br><span class="line">    configFile file(&quot;$&#123;project.rootDir&#125;&#x2F;config&#x2F;checkstyle.xml&quot;) &#x2F;&#x2F; 配置样式</span><br><span class="line">    include &#39;**&#x2F;*.java&#39;</span><br><span class="line">    exclude &#39;**&#x2F;gen&#x2F;**&#39;</span><br><span class="line">    classpath &#x3D; files()</span><br><span class="line">    ignoreFailures true &#x2F;&#x2F; 配置是否忽略失败</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 自定义报告生成路径</span><br><span class="line">    reports &#123;</span><br><span class="line">        html &#123;</span><br><span class="line">            destination &quot;$&#123;project.rootDir&#125;&#x2F;app&#x2F;build&#x2F;reports&#x2F;checkstyle-result.html&quot;</span><br><span class="line">        &#125;</span><br><span class="line">        xml &#123;</span><br><span class="line">            destination &quot;$&#123;project.rootDir&#125;&#x2F;app&#x2F;build&#x2F;reports&#x2F;checkstyle-result.xml&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">tasks.withType(Checkstyle).each &#123; checkstyleTask -&gt;</span><br><span class="line">    checkstyleTask.doLast &#123;</span><br><span class="line">        reports.all &#123; report -&gt;</span><br><span class="line">            &#x2F;&#x2F; 检查生成报告中是否有错误</span><br><span class="line">            def outputFile &#x3D; report.destination</span><br><span class="line">            if (outputFile.exists() &amp;&amp; outputFile.text.contains(&quot;&lt;error &quot;) &amp;&amp; !checkstyleTask.ignoreFailures) &#123;</span><br><span class="line">                throw new GradleException(&quot;There were checkstyle errors! For more info check $outputFile&quot;)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="关于配置样式"><a href="#关于配置样式" class="headerlink" title="关于配置样式"></a>关于配置样式</h3><ul>
+<li>CheckStyle会根据配置文件进行分析，目前采用的的华为的<a href="https://gist.github.com/ownwell/c32878440216f1866842" target="_blank" rel="noopener">CheckStyle</a></li>
+<li>参见上文的gradle设置，配置样式在”${project.rootDir}/config/checkstyle.xml”中，即在project的根目录下创建config文件夹，再把华为的CheckStyle下载下来命名为checkstyle.xml放入其中。（见附件）</li>
+<li>华为的checkstyle文件可能会报URI is not registered的错误，我的做法是在报错的地方使用快捷键alt+enter让android studio自动完成相关配置。<br><img src="http://osnyzf7ny.bkt.clouddn.com/URI%20is%20not%20registered.png" alt="image"></li>
+</ul>
+<h2 id="配置FindBugs"><a href="#配置FindBugs" class="headerlink" title="配置FindBugs"></a>配置FindBugs</h2><h3 id="修改build-gradle-1"><a href="#修改build-gradle-1" class="headerlink" title="修改build.gradle"></a>修改build.gradle</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">apply plugin: &quot;findbugs&quot;</span><br><span class="line"></span><br><span class="line">task findbugs(type: FindBugs) &#123;</span><br><span class="line">    ignoreFailures &#x3D; true &#x2F;&#x2F;有警告错误的时候也是允许构建</span><br><span class="line">    effort &#x3D; &quot;default&quot;</span><br><span class="line">    reportLevel &#x3D; &quot;high&quot;&#x2F;&#x2F;报告的级别，Low,Medium,High一般来说我们首先关注的是高级别的报告，再关注低一级别的报告</span><br><span class="line">    excludeFilter &#x3D; new File(&quot;$&#123;project.rootDir&#125;&#x2F;config&#x2F;findbugs-filter.xml&quot;)&#x2F;&#x2F;配置文件</span><br><span class="line">    classes &#x3D; files(&quot;$&#123;project.rootDir&#125;&#x2F;app&#x2F;build&#x2F;intermediates&#x2F;classes&quot;)&#x2F;&#x2F;classe文件夹地址</span><br><span class="line">    source &#x3D; fileTree(&#39;src&#x2F;main&#x2F;java&#x2F;&#39;)&#x2F;&#x2F;源代码文件地址</span><br><span class="line">    classpath &#x3D; files()</span><br><span class="line">    reports &#123;</span><br><span class="line">        xml.enabled &#x3D; true</span><br><span class="line">        html.enabled &#x3D; false</span><br><span class="line">        xml &#123;</span><br><span class="line">            destination &quot;$&#123;project.rootDir&#125;&#x2F;app&#x2F;build&#x2F;reports&#x2F;findbugs.xml&quot;</span><br><span class="line">        &#125;</span><br><span class="line">        html &#123;</span><br><span class="line">            destination &quot;$&#123;project.rootDir&#125;&#x2F;app&#x2F;build&#x2F;reports&#x2F;findbugs.html&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="配置文件（-config-findbugs-filter-xml"><a href="#配置文件（-config-findbugs-filter-xml" class="headerlink" title="配置文件（/config/findbugs-filter.xml)"></a>配置文件（/config/findbugs-filter.xml)</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version&#x3D;&quot;1.0&quot; encoding&#x3D;&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;FindBugsFilter&gt;</span><br><span class="line">    &lt;Match&gt;</span><br><span class="line">        &lt;!-- ignore all issues in resource generation --&gt;</span><br><span class="line">        &lt;Class name&#x3D;&quot;~.*\.R\$.*&quot;&#x2F;&gt;</span><br><span class="line">    &lt;&#x2F;Match&gt;</span><br><span class="line">    &lt;Match&gt;</span><br><span class="line">        &lt;Class name&#x3D;&quot;~.*\.Manifest\$.*&quot;&#x2F;&gt;</span><br><span class="line">    &lt;&#x2F;Match&gt;</span><br><span class="line">    &lt;!-- ignore all bugs in test classes, except for those bugs specifically relating to JUnit tests --&gt;</span><br><span class="line">    &lt;Match&gt;</span><br><span class="line">        &lt;Class name&#x3D;&quot;~.*\.*Test&quot; &#x2F;&gt;</span><br><span class="line">        &lt;!-- test classes are suffixed by &#39;Test&#39; --&gt;</span><br><span class="line">        &lt;Not&gt;</span><br><span class="line">            &lt;Bug code&#x3D;&quot;IJU&quot; &#x2F;&gt; &lt;!-- &#39;IJU&#39; is the code for bugs related to JUnit test code --&gt;</span><br><span class="line">        &lt;&#x2F;Not&gt;</span><br><span class="line">    &lt;&#x2F;Match&gt;</span><br><span class="line">&lt;&#x2F;FindBugsFilter&gt;</span><br></pre></td></tr></table></figure>
+<p>（见附件）</p>
+<h1 id="Jenkins中的配置"><a href="#Jenkins中的配置" class="headerlink" title="Jenkins中的配置"></a>Jenkins中的配置</h1><h2 id="安装插件"><a href="#安装插件" class="headerlink" title="安装插件"></a>安装插件</h2><ul>
+<li><a href="https://wiki.jenkins.io/display/JENKINS/Android+Lint+Plugin" target="_blank" rel="noopener">AndroidLintPlugin</a></li>
+<li><a href="https://wiki.jenkins.io/display/JENKINS/Android+Lint+Plugin" target="_blank" rel="noopener">Checkstyle Plugin</a></li>
+<li><a href="https://wiki.jenkins.io/display/JENKINS/Android+Lint+Plugin" target="_blank" rel="noopener">FindBugs Plugin</a></li>
+</ul>
+<h2 id="在gradle的task中添加lint，checkstyle，findbugs"><a href="#在gradle的task中添加lint，checkstyle，findbugs" class="headerlink" title="在gradle的task中添加lint，checkstyle，findbugs"></a>在gradle的task中添加lint，checkstyle，findbugs</h2><p><img src="http://osnyzf7ny.bkt.clouddn.com/lint-build.png" alt="image"></p>
+<h2 id="构建后发布相关结果"><a href="#构建后发布相关结果" class="headerlink" title="构建后发布相关结果"></a>构建后发布相关结果</h2><p><img src="http://osnyzf7ny.bkt.clouddn.com/after-lint.png" alt="image"></p>
+<ul>
+<li>可在Lint files设置插件要分析的lint产生的xml结果，不设置的话将自动扫描名字匹配lint-results*的xml文件，由于默认产生的xml文件就是lint-results.xml，因此我并未设置。</li>
+<li>选择Run always时可在项目build失败的时候继续接解析xml文件解析，否则将会跳过解析步骤。</li>
+<li>此时点击构建项目后可以在输出目录左边发现”Lint Issues”等图标</li>
+</ul>
+<h2 id="在Editable-Email-Notification选择邮件模板进行相关通知"><a href="#在Editable-Email-Notification选择邮件模板进行相关通知" class="headerlink" title="在Editable Email Notification选择邮件模板进行相关通知"></a>在Editable Email Notification选择邮件模板进行相关通知</h2><p>在Default Content中输入”${SCRIPT, template=”lint.template”}”  (模板是我自定义的)</p>
+<h2 id="定时检查代码分支并进行自动构建"><a href="#定时检查代码分支并进行自动构建" class="headerlink" title="定时检查代码分支并进行自动构建"></a>定时检查代码分支并进行自动构建</h2><h3 id="配置自动化构建"><a href="#配置自动化构建" class="headerlink" title="配置自动化构建"></a>配置自动化构建</h3><p>由于Jenkins上的项目大多数是参数化构建的，以项目“show-android_git”为例，有代码分支和服务器环境两个，如果由Jenkins进行自动化构建的话，这些参数将为空，因此如果有相关配置需要引用这些参数的话，请设置好如果为空的情况，比如</p>
+<h3 id="在构建触发器中设置Poll-SCM"><a href="#在构建触发器中设置Poll-SCM" class="headerlink" title="在构建触发器中设置Poll SCM"></a>在构建触发器中设置Poll SCM</h3><p><img src="http://osnyzf7ny.bkt.clouddn.com/pollscm.png" alt="image"><br>这项设置代表每小时将会检查一次分支的代码，如果有新commit，将会进行自动构建项目。要检查的分支可在源码管理-Git-Branches to build中设置Branch Specifier。</p>
+<h4 id="关于Poll-SCM和Build-periodically的区别"><a href="#关于Poll-SCM和Build-periodically的区别" class="headerlink" title="关于Poll SCM和Build periodically的区别"></a>关于Poll SCM和Build periodically的区别</h4><ul>
+<li>Poll SCM：定时检查目标分支的源码变更，如果有更新就checkout最新code下来，然后执行构建动作。</li>
+<li>Build periodically：周期进行项目构建，不管代码是否发生变化。</li>
+</ul>
+<h4 id="关于时间的设置"><a href="#关于时间的设置" class="headerlink" title="关于时间的设置"></a>关于时间的设置</h4><p>具体设置请查阅其他资料，这里提供一个简单方便的方法，使用@yearly, @annually, @monthly, @weekly, @daily, @midnight，@hourly 等时间别名可达到相同效果，比如我这里使用的@hourly代表每小时。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/Jenkins/" rel="tag"># Jenkins</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/07/11/%E5%85%B3%E4%BA%8EJenkins-Android%E2%80%9CError-occurred-during-initialization-of-VM%E2%80%9D%E7%9A%84%E9%94%99%E8%AF%AF/" rel="next" title="关于Jenkins Android“Error occurred during initialization of VM”的错误">
+                <i class="fa fa-chevron-left"></i> 关于Jenkins Android“Error occurred during initialization of VM”的错误
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/07/25/%E5%8F%8C%E7%BD%91%E5%8D%A1%E4%B8%BB%E6%9C%BA-Ubuntu%E8%99%9A%E6%8B%9F%E6%9C%BA-%E6%97%A0%E7%BA%BF%E8%B7%AF%E7%94%B1%E5%99%A8%E6%9E%84%E5%BB%BAwifi%E6%B5%8B%E8%AF%95%E7%8E%AF%E5%A2%83/" rel="prev" title="双网卡主机+Ubuntu虚拟机+无线路由器构建wifi测试环境">
+                双网卡主机+Ubuntu虚拟机+无线路由器构建wifi测试环境 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.png"
+                alt="Xuejian" />
+            
+              <p class="site-author-name" itemprop="name">Xuejian</p>
+              <p class="site-description motion-element" itemprop="description">BAT拧螺丝的</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/OLieWaGundam" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://twitter.com/Wxj233" target="_blank" title="Twitter">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Twitter</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="http://weibo.com/2436310322" target="_blank" title="Weibo">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Weibo</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://www.zhihu.com/people/wu-jie-chao-14" target="_blank" title="知乎">
+                      
+                        <i class="fa fa-fw fa-globe"></i>知乎</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#简介"><span class="nav-number">2.</span> <span class="nav-text">简介</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Lint"><span class="nav-number">2.1.</span> <span class="nav-text">Lint</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Android-Lint-Plugin"><span class="nav-number">2.1.1.</span> <span class="nav-text">Android Lint Plugin</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Checkstyle"><span class="nav-number">2.2.</span> <span class="nav-text">Checkstyle</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FindBugs"><span class="nav-number">2.3.</span> <span class="nav-text">FindBugs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">2.4.</span> <span class="nav-text">参考资料</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#项目中的配置"><span class="nav-number">3.</span> <span class="nav-text">项目中的配置</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#配置Lint"><span class="nav-number">3.1.</span> <span class="nav-text">配置Lint</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置CheckStyle"><span class="nav-number">3.2.</span> <span class="nav-text">配置CheckStyle</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#修改build-gradle"><span class="nav-number">3.2.1.</span> <span class="nav-text">修改build.gradle</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关于配置样式"><span class="nav-number">3.2.2.</span> <span class="nav-text">关于配置样式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置FindBugs"><span class="nav-number">3.3.</span> <span class="nav-text">配置FindBugs</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#修改build-gradle-1"><span class="nav-number">3.3.1.</span> <span class="nav-text">修改build.gradle</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置文件（-config-findbugs-filter-xml"><span class="nav-number">3.4.</span> <span class="nav-text">配置文件（&#x2F;config&#x2F;findbugs-filter.xml)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Jenkins中的配置"><span class="nav-number">4.</span> <span class="nav-text">Jenkins中的配置</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#安装插件"><span class="nav-number">4.1.</span> <span class="nav-text">安装插件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#在gradle的task中添加lint，checkstyle，findbugs"><span class="nav-number">4.2.</span> <span class="nav-text">在gradle的task中添加lint，checkstyle，findbugs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#构建后发布相关结果"><span class="nav-number">4.3.</span> <span class="nav-text">构建后发布相关结果</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#在Editable-Email-Notification选择邮件模板进行相关通知"><span class="nav-number">4.4.</span> <span class="nav-text">在Editable Email Notification选择邮件模板进行相关通知</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#定时检查代码分支并进行自动构建"><span class="nav-number">4.5.</span> <span class="nav-text">定时检查代码分支并进行自动构建</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#配置自动化构建"><span class="nav-number">4.5.1.</span> <span class="nav-text">配置自动化构建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在构建触发器中设置Poll-SCM"><span class="nav-number">4.5.2.</span> <span class="nav-text">在构建触发器中设置Poll SCM</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#关于Poll-SCM和Build-periodically的区别"><span class="nav-number">4.5.2.1.</span> <span class="nav-text">关于Poll SCM和Build periodically的区别</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#关于时间的设置"><span class="nav-number">4.5.2.2.</span> <span class="nav-text">关于时间的设置</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Xuejian</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
